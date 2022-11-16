@@ -28,7 +28,7 @@ plot(Pressure, Radiation)
 plot(Humidity, Radiation)
 plot(WindDirection.Degrees., Radiation)
 plot(Speed, Radiation)
-plot(Day.1.Night.0, Radiation)
+plot(DayNight, Radiation)
 
 # Fit
 fit <- lm(Radiation ~ (Temperature + Pressure + Humidity + WindDirection.Degrees. + Speed) * Day.1.Night.0)
