@@ -1,7 +1,7 @@
 # Import dataset from csv file
 data <- read.csv('solar-radiation-updated.csv', header = TRUE, sep = ",")
 head(data,100)
-
+#tetschun
 # Data Columns
 UNIX <- data$UNIXTime
 Radiation <- data$Radiation
