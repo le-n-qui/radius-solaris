@@ -1,7 +1,7 @@
 # Import dataset from csv file
 data <- read.csv('solar-radiation-updated.csv', header = TRUE, sep = ",")
 #For wilson his file is saved somewhere else
-data <- solar.radiation.updated
+data <- solar.radiation
 #Create a train/test split
 set.seed(1)
 sample <- sample(c(TRUE,FALSE), nrow(data),replace = TRUE, prob = c(0.8,0.2))
@@ -50,14 +50,14 @@ abline(0,1)
 
 library(leaps)
 ?regsubsets
-all <- regsubsets(x=cbind(solar.radiation.updated$Temperature,solar.radiation.updated$Pressure, solar.radiation.updated$Humidity, solar.radiation.updated$WindDirection.Degrees., solar.radiation.updated$Speed), y=solar.radiation.updated$Radiation,  method = "exhaustive", all.best = FALSE, nbest = 3)
+all <- regsubsets(x=cbind(Temperature,Pressure, Humidity, WindDirection, Speed), y=Radiation,  method = "exhaustive", all.best = FALSE, nbest = 3)
 summary(all)
 Cp <- summary(all)$cp
 AdjR2 <- summary(all)$adjr2
 SSRes <- summary(all)$rss
 R2 <- summary(all)$rsq
 Matrix <- summary(all)$which
-cor(solar.radiation.updated[3:7])
+cor(train[3:7])
 p <- apply(Matrix,1, sum)
 MSRes <- SSRes/(length(Day)-p)
 output <- cbind(p, Matrix, SSRes, R2, AdjR2, MSRes, Cp)
