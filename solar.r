@@ -1,15 +1,19 @@
-# Import dataset from csv file
+# Predicting Solar Radiation
+# By Multiple Linear Regression
+
+# Import dataset from CSV file
 data <- read.csv('solar-radiation-updated.csv', header = TRUE, sep = ",")
 #For wilson his file is saved somewhere else
 data <- solar.radiation
-#Create a train/test split
+
+# Create a train/test split
 set.seed(1)
-sample <- sample(c(TRUE,FALSE), nrow(data),replace = TRUE, prob = c(0.8,0.2))
+sample <- sample(c(TRUE,FALSE), nrow(data), replace = TRUE, prob = c(0.8,0.2))
 train <- data[sample,]
 test <- data[!sample,]
-head(train,100)
-#tetschun
-# Data Columns
+
+# Save data series (columns) 
+# into local variables
 UNIX <- train$UNIXTime
 Radiation <- train$Radiation
 Temperature <- train$Temperature
