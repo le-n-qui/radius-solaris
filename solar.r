@@ -33,7 +33,7 @@ contrasts(monthfactor)
 plot(Temperature,Radiation)
 plot(Pressure, Radiation)
 plot(Humidity, Radiation)
-plot(WindDirection.Degrees., Radiation)
+plot(WindDirection, Radiation)
 plot(Speed, Radiation)
 plot(DayNight, Radiation)
 
@@ -67,7 +67,8 @@ output
 #Box-Cox
 
 library(MASS)
-boxcox(fit, seq(-1,1,.1))
+boxcox(fit, seq(.4,.6,.1))
+?boxcox
 
 #Attempt Ln(Radiation) transformation
 fit <- lm(log(Radiation) ~ (Temperature + Pressure + Humidity + WindDirection + Speed) * DayNight)
@@ -79,6 +80,9 @@ train2 <- train[train$Day.1.Night.0 == 1,]
 train <- train2
 fit <- lm(Radiation ~ Temperature + Pressure + Humidity + WindDirection + Speed)
 summary(fit)
-fit <- lm(log(Radiation) ~ Temperature + Pressure + Humidity + WindDirection + Speed)
+
+#Attempting a root transformation on response
+
+fit <- lm(Radiation^.5 ~ Temperature + Pressure + Humidity + WindDirection + Speed)
 summary(fit)
 
