@@ -1,8 +1,17 @@
 # Predicting Solar Radiation
 # By Multiple Linear Regression
 
-# Import dataset from CSV file
-data <- read.csv('solar-radiation.csv', header = TRUE, sep = ",")
+# First import dataset from the CSV file using RStudio
+# Files -> Look for CSV file -> Click on file name -> Import Dataset -> Import
+# A dataframe object, solar_radiation, 
+# will be available in the global environment
+
+# OPTIONAL: 
+# Change filename with your local path to the CSV file
+# Uncomment the code below to get dataframe from CSV file
+# library(readr)
+# filename = "solar-radiation.csv"
+# solar_radiation <- read_csv(filename)
 
 # Create a train/test split
 set.seed(1)
