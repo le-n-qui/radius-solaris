@@ -15,13 +15,14 @@
 
 # Create a train/test split
 set.seed(1)
-sample <- sample(c(TRUE,FALSE), nrow(data), replace = TRUE, prob = c(0.8,0.2))
-train <- data[sample,]
-test <- data[!sample,]
+sample <- sample(c(TRUE,FALSE), nrow(solar_radiation), 
+                 replace = TRUE, prob = c(0.8,0.2))
+train <- solar_radiation[sample,]
+test <- solar_radiation[!sample,]
 
-#Remove Night time values
+# Remove Night Time values
 
-train <- train[train$Day.1.Night.0 == 1,]
+train <- train[train$`Day=1/Night=0` == 1,]
 
 # Save data series (columns) 
 # into local variables
@@ -30,9 +31,9 @@ Radiation <- train$Radiation
 Temperature <- train$Temperature
 Pressure <- train$Pressure
 Humidity <- train$Humidity
-WindDirection <- train$WindDirection.Degrees.
+WindDirection <- train$`WindDirection(Degrees)`
 Speed <- train$Speed
-DayNight <- train$Day.1.Night.0
+DayNight <- train$`Day=1/Night=0`
 Month <- train$Month
 Day <- train$Day
 TimeOfDay <- train$TimeOfDay
@@ -45,31 +46,41 @@ monthfactor <- factor(Month)
 contrasts(monthfactor) <-contr.treatment(4,base=1)
 contrasts(monthfactor)
 
-#All numeric variable model
-
-fit <- lm(Radiation ~ Temperature + Pressure + Humidity + WindDirection + Speed + UNIX + TimeOfDay + TimeSunRise + TimeSunSet)
+# Fit linear model with all numeric variables
+fit <- lm(Radiation ~ Temperature + Pressure + Humidity
+          + WindDirection + Speed + UNIX +
+            TimeOfDay + TimeSunRise + TimeSunSet)
 summary(fit)
 cor(train)
 
-#Model without night time points, and Time since surise as the time variable
-fit <- lm(Radiation ~ Temperature + Pressure + Humidity + WindDirection + Speed + TimeSinceSunRise)
+# Fit a model without night time points, and 
+# with TimeSinceSunrise as the time variable
+fit <- lm(Radiation ~ Temperature + Pressure + Humidity 
+          + WindDirection + Speed + TimeSinceSunRise)
 summary(fit)
-cor(cbind(Temperature, Pressure, Humidity, WindDirection, Speed, TimeSinceSunRise))
+cor(cbind(Temperature, Pressure, Humidity, 
+          WindDirection, Speed, TimeSinceSunRise))
 
-# Fit with DayNight
-fit <- lm(Radiation ~ (Temperature + Pressure + Humidity + WindDirection + Speed + TimeSinceSunRise) * DayNight)
+# Fit a model with DayNight
+fit <- lm(Radiation ~ (Temperature + Pressure + Humidity 
+                       + WindDirection + Speed + TimeSinceSunRise) * DayNight)
 summary(fit)
 
-#Residual Assumptions
-plot(fitted.values(fit), rstudent(fit), xlab = "fitted values", ylab = "Studentized residuals", main = "residual plot")
+# Plot residual plot
+# to examine residual assumptions
+plot(fitted.values(fit), rstudent(fit), 
+     xlab = "fitted values", ylab = "Studentized residuals",
+     main = "residual plot")
 qqnorm(rstandard(fit))
 abline(0,1)
 
-#Initial variable Select
+# Initial variable selection
 
 library(leaps)
 ?regsubsets
-all <- regsubsets(x=cbind(Temperature,Pressure, Humidity, WindDirection, Speed), y=Radiation,  method = "exhaustive", all.best = FALSE, nbest = 3)
+all <- regsubsets(x=cbind(Temperature,Pressure, Humidity,WindDirection, Speed),
+                  y=Radiation,method = "exhaustive", 
+                  all.best = FALSE, nbest = 3)
 summary(all)
 Cp <- summary(all)$cp
 AdjR2 <- summary(all)$adjr2
@@ -80,22 +91,25 @@ cor(train[3:7])
 p <- apply(Matrix,1, sum)
 MSRes <- SSRes/(length(Day)-p)
 output <- cbind(p, Matrix, SSRes, R2, AdjR2, MSRes, Cp)
-colnames(output)[3:7] <- c("Temperature", "Pressure", "Humidity", "Wind Direction", "Wind Speed") 
+colnames(output)[3:7] <- c("Temperature", "Pressure", "Humidity",
+                           "Wind Direction", "Wind Speed") 
 output
 
-#Box-Cox
+# Box-Cox
 
 library(MASS)
 boxcox(fit, seq(.4,.6,.1))
 ?boxcox
 
-#Attempt Ln(Radiation) transformation
-fit <- lm(log(Radiation) ~ (Temperature + Pressure + Humidity + WindDirection + Speed) * DayNight)
+# Attempt Ln(Radiation) transformation
+fit <- lm(log(Radiation) ~ (Temperature + Pressure 
+                            + Humidity + WindDirection + Speed) * DayNight)
 summary(fit)
 
-#Attempting a root transformation on response
+# Attempting a root transformation on response
 
-fit <- lm(Radiation^.5 ~ Temperature + Pressure + Humidity + WindDirection + Speed)
+fit <- lm(Radiation^.5 ~ Temperature + Pressure + Humidity 
+          + WindDirection + Speed)
 summary(fit)
 
 # Initial Plots
