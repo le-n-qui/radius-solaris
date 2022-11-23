@@ -68,11 +68,12 @@ summary(fit)
 
 # Plot residual plot
 # to examine residual assumptions
-plot(fitted.values(fit), rstudent(fit), 
+plot(fitted.values(fit), residuals(fit), 
      xlab = "fitted values", ylab = "Studentized residuals",
      main = "residual plot")
+
 qqnorm(rstandard(fit))
-abline(0,1)
+abline(0,-1, col = "red")
 
 # Initial variable selection
 
@@ -146,4 +147,9 @@ transformed.Time.sample <- sin(3.14/(TimeSinceSunRise[max(Radiation)] -
 transformed.Radiation.sample <- sin(3.14/(max(Radiation) - 
                                        min(Radiation) )* 
                                  (Radiation - min(Radiation)))
-
+Time <- TimeSinceSunRise - mean(TimeSinceSunRise)
+Time <- abs(Time)
+plot(Time, Radiation)
+fit <- lm(Radiation~Time + Temperature + Pressure + Humidity 
+          + WindDirection + Speed)
+summary(fit)
