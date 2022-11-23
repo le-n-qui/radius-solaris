@@ -9,9 +9,9 @@
 # OPTIONAL: 
 # Change filename with your local path to the CSV file
 # Uncomment the code below to get dataframe from CSV file
-# library(readr)
-# filename = "solar-radiation.csv"
-# solar_radiation <- read_csv(filename)
+ library(readr)
+ filename = "solar-radiation.csv"
+ solar_radiation <- read_csv(filename)
 
 # Create a train/test split
 set.seed(1)
@@ -119,4 +119,31 @@ plot(Humidity, Radiation)
 plot(WindDirection, Radiation)
 plot(Speed, Radiation)
 plot(DayNight, Radiation)
+plot(TimeSinceSunRise, Radiation)
+plot(transformed.Time, Radiation)
+fit <- lm(Radiation~transformed.Time)
+summary(fit)
+transformed.Time <- sin(3.14/(TimeSinceSunRise[max(Radiation)] - 
+ TimeSinceSunRise[min(Radiation)] )* 
+ (TimeSinceSunRise - TimeSinceSunRise[min(Radiation)]))
+
+sample <- sample(c(TRUE,FALSE), nrow(solar_radiation), 
+                 replace = TRUE, prob = c(0.8,0.2))
+train <- solar_radiation[sample,]
+
+sample <- sample(c(1:nrow(solar_radiation)), .01*nrow(solar_radiation))
+sample
+
+plot(TimeSinceSunRise,transformed.Radiation.sample)
+
+sample_0 <- sample_n(solar_radiation, length(solar_radiation)*0.01)
+library(dplyr)
+
+
+transformed.Time.sample <- sin(3.14/(TimeSinceSunRise[max(Radiation)] - 
+                                TimeSinceSunRise[min(Radiation)] )* 
+                          (TimeSinceSunRise - TimeSinceSunRise[min(Radiation)]))
+transformed.Radiation.sample <- sin(3.14/(max(Radiation) - 
+                                       min(Radiation) )* 
+                                 (Radiation - min(Radiation)))
 
