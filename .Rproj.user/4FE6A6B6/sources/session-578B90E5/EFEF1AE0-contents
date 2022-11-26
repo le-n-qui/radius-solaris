@@ -150,7 +150,7 @@ transformed.Radiation.sample <- sin(3.14/(max(Radiation) -
 Time <- TimeSinceSunRise - mean(TimeSinceSunRise)
 Time <- abs(Time)
 plot(Time, Radiation)
-fit <- lm(1/log(Radiation)~Time + Temperature + Pressure + Humidity 
+fit <- lm(Radiation~Time + Temperature + Pressure + Humidity 
           + WindDirection + Speed)
 plot(fitted.values(fit), rstandard(fit))
 summary(fit)
