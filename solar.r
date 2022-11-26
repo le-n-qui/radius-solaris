@@ -9,9 +9,9 @@
 # OPTIONAL: 
 # Change filename with your local path to the CSV file
 # Uncomment the code below to get dataframe from CSV file
- library(readr)
- filename = "solar-radiation.csv"
- solar_radiation <- read_csv(filename)
+library(readr)
+filename = "solar-radiation.csv"
+solar_radiation <- read_csv(filename)
 
 # Create a train/test split
 set.seed(1)
