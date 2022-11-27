@@ -100,31 +100,222 @@ fit <- lm(I(sqrt(Radiation)) ~ poly(logT-mean(logT),1)
 fit <- lm(I(sqrt(Radiation)) ~ poly(logT-mean(logT),1)
           + poly(logH-mean(logH),2))
 
-
 summary(fit)
 plot(rstandard(fit) ~ fitted.values(fit))
 qqnorm(rstandard(fit))
 abline(0,1)
 
 
+# Compare Individual Transformations
+par(mfrow=c(2,5))
+fitlog <- lm(I(sqrt(Radiation)) ~ Temperature + Pressure + Humidity + WindDirection + Speed + I(log(TimeSinceSunRise)))
+qqnorm(rstandard(fitlog), main="Log")
+abline(0,1)
+
+fitinv <- lm(I(sqrt(Radiation)) ~ Temperature + Pressure + Humidity + WindDirection + Speed + I(1/(TimeSinceSunRise)))
+qqnorm(rstandard(fitinv), main="Inverse")
+abline(0,1)
+
+fitsqrt <- lm(I(sqrt(Radiation)) ~ Temperature + Pressure + Humidity + WindDirection + Speed + I(sqrt(TimeSinceSunRise)))
+qqnorm(rstandard(fitsqrt), main="Sqrt")
+abline(0,1)
+
+fit2 <- lm(I(sqrt(Radiation)) ~ Temperature + Pressure + Humidity + WindDirection + Speed + I((TimeSinceSunRise)^2))
+qqnorm(rstandard(fit2), main="Square")
+abline(0,1)
+
+fit3 <- lm(I(sqrt(Radiation)) ~ Temperature + Pressure +  Humidity + WindDirection + Speed + I((TimeSinceSunRise)^3))
+qqnorm(rstandard(fit3), main="Cube")
+abline(0,1)
+
+plot(rstandard(fitlog) ~ fitted.values(fitlog), main="Log")
+plot(rstandard(fitinv) ~ fitted.values(fitinv), main="Inverse")
+plot(rstandard(fitsqrt) ~ fitted.values(fitsqrt), main="Sqrt")
+plot(rstandard(fit2) ~ fitted.values(fit2), main="Square")
+plot(rstandard(fit3) ~ fitted.values(fit3), main="Cube")
+
+
+# R^2, sqrt{MS_Res}
 # 1, log, -1, sqrt, 2, 3
 # Temperature
-.5143, .5176, .5143, .5166, .5143, .5143
-
+#.5143, .5176, .5156, .5166, .5061, .4936
+# 6.458, 6.436, 6.449, 6.443, 6.513, 6.595
 # Pressure
-.5143, .5143, .5047, .5143, .5143, .5143
-
+# .5143, .5143, .5047, .5143, .5143, .5143
+# 6.458, 6.458, 6.522, 6.458, 6.458, 6.458
 # Humidity
-.5143, .5201, .5071, .5172, .5143, .5143
-
+# .5143, .5201, .5231, .5172, .51,   .505
+# 6.458, 6.42,  6.4,   6.439, 6.487, 6.5
 # WindDirection
-.5143, .5129,  .5086, .5158, .5143, .5143
-
+# .5143, .5129, .5086, .5158, .5107, .5092
+# 6.458, 6.468, 6.496, 6.449, 6.482, 6.492
 # Speed
-.5143, .5143, .5044, .5166, .5143, .5143
-
+# .5143, .5158, N/A, .5166, .5083, .505
+# 6.458, 6.449, N/A, 6.443, 6.498, 6.52
 #TimeSinceSunRise
-.5143, .4467, .4466, .47, .5143, .5143
+# .5143, .4467, .4471, .47,   .5826, .6177
+# 6.458, 6.893, 6.891, 6.746, 5.987, 5.73
+
+###################################
+# Best Individual Transformations #
+###################################
+
+logT <- I(log(Temperature))
+invH <- I(1/(Humidity))
+sqrtWD <- I(sqrt(WindDirection))
+sqrtS <- I(sqrt(Speed))
+TSSR <- I((TimeSinceSunRise)^3)
+
+fit <- lm(I(sqrt(Radiation)) ~ logT + Pressure + invH + sqrtWD + sqrtS + TSSR)
+drop1(fit, I(sqrt(Radiation)) ~ logT + Pressure + invH + sqrtWD + sqrtS + TSSR, test = "F")
+summary(fit)
+par(mfrow=c(1,2))
+
+qqnorm(rstandard(fit), main="Individual Transformations")
+abline(0,1)
+
+plot(rstandard(fit) ~ fitted.values(fit), main="Individual Transformations")
+
+########################
+# Polynomial Selection #
+########################
+
+fit <- lm(I(sqrt(Radiation)) ~ 
+            poly(logT-mean(logT),2)
+          + poly(Pressure-mean(Pressure),2) 
+          + poly(invH-mean(invH),2) 
+          + poly(sqrtWD-mean(sqrtWD),2) 
+          + poly(sqrtS-mean(sqrtS),2) 
+          + poly(TSSR-mean(TSSR),2))
+summary(fit)
+
+# Delete Insignificant Predictors (F test)
+clogT <- logT-mean(logT)
+cPressure <- Pressure-mean(Pressure)
+cinvH <- invH-mean(invH)
+csqrtWD <- sqrtWD-mean(sqrtWD)
+csqrtS <- sqrtS-mean(sqrtS)
+cTSSR <- TSSR-mean(TSSR)
+
+fit <- lm(I(sqrt(Radiation)) ~ 
+          clogT+ I(clogT^2)
+          + cPressure + I(cPressure^2) 
+          + cinvH + I(cinvH^2) 
+          + csqrtWD + I(csqrtWD^2) 
+          + csqrtS + I(csqrtS^2) 
+          + cTSSR + I(cTSSR^2))
+drop1(fit, I(sqrt(Radiation)) ~ 
+          clogT+ I(clogT^2)
+          + cPressure + I(cPressure^2) 
+          + cinvH + I(cinvH^2) 
+          + csqrtWD + I(csqrtWD^2) 
+          + csqrtS + I(csqrtS^2) 
+          + cTSSR + I(cTSSR^2),
+      test = "F")
+fit <- lm(I(sqrt(Radiation)) ~ 
+            clogT+ I(clogT^2)
+          + cPressure + I(cPressure^2) 
+          + cinvH 
+          + csqrtWD + I(csqrtWD^2) 
+          + csqrtS + I(csqrtS^2) 
+          + cTSSR + I(cTSSR^2))
+drop1(fit, I(sqrt(Radiation)) ~ 
+        clogT+ I(clogT^2)
+      + cPressure + I(cPressure^2) 
+      + cinvH 
+      + csqrtWD + I(csqrtWD^2) 
+      + csqrtS + I(csqrtS^2) 
+      + cTSSR + I(cTSSR^2),
+      test = "F")
+####################
+# Final Polynomial #
+####################
+fit <- lm(I(sqrt(Radiation)) ~ 
+            clogT+ I(clogT^2)
+          + cPressure + I(cPressure^2) 
+          + cinvH 
+          + csqrtWD
+          + csqrtS + I(csqrtS^2) 
+          + cTSSR + I(cTSSR^2))
+drop1(fit, I(sqrt(Radiation)) ~ 
+        clogT+ I(clogT^2)
+      + cPressure + I(cPressure^2) 
+      + cinvH 
+      + csqrtWD
+      + csqrtS + I(csqrtS^2) 
+      + cTSSR + I(cTSSR^2),
+      test = "F")
+
+par(mfrow=c(1,2))
+
+qqnorm(rstandard(fit), main="Polynomial Individual Transformations")
+abline(0,1)
+
+plot(rstandard(fit) ~ fitted.values(fit), main="Polynomial Individual Transformations")
+
+summary(fit)
+
+
+
+
+
+qqnorm(rstandard(fit), main="Individual Transformations")
+abline(0,1)
+
+plot(rstandard(fit) ~ fitted.values(fit), main="Individual Transformations")
+
+library(leaps)
+all <- regsubsets(x=cbind(logT, I(logT^2), 
+                          Pressure, I(Pressure^2), 
+                          invH, I(invH^2), 
+                          sqrtWD, I(sqrtWD^2), 
+                          sqrtS, I(sqrtS^2), 
+                          TSSR, I(TSSR^2)),
+                  y=Radiation, method = "exhaustive", 
+                  all.best = FALSE, nbest = 3)
+summary(all)
+Cp <- summary(all)$cp
+AdjR2 <- summary(all)$adjr2
+SSRes <- summary(all)$rss
+R2 <- summary(all)$rsq
+Matrix <- summary(all)$which
+cor(train[3:7])
+p <- apply(Matrix,1, sum)
+MSRes <- SSRes/(length(Day)-p)
+output <- cbind(p, Matrix, SSRes, R2, AdjR2, MSRes, Cp)
+colnames(output)[3:7] <- c("Temperature", "Pressure", "Humidity",
+                           "Wind Direction", "Wind Speed") 
+output
+
+
+
+
+solar_radiation <- as.data.frame(solar_radiation)
+model_seq <- seq()
+r2_seq <- seq()
+mse_seq <- seq()
+
+for(i in c(3,4,5,6,7)) {
+  for (y in c(1)){
+    print(i)
+    print(names(solar_radiation)[i])
+    x <- poly(solar_radiation[,i])
+    fit_tmp <-lm(solar_radiation$Radiation ~ x, data = solar_radiation)
+    png(file=paste("residual_plot_for_", names(solar_radiation)[i], "^", y, ".png",sep = ""))
+    plot(fitted.values(fit_tmp), rstandard(fit_tmp), main=paste("Residual Plot for", names(solar_radiation)[i], " and power to ", y,sep = ""))
+    dev.off()
+    jpeg(file=paste("qq_plot_for_", names(solar_radiation)[i], "^", y, ".png",sep = ""))
+    plot(fitted.values(fit_tmp), rstandard(fit_tmp), main=paste("QQ Plot for", names(solar_radiation)[i], " and power to ", y,sep = ""))
+    dev.off()
+    sm <- summary(fit_tmp)
+    sink(file = paste("summary_for_", names(solar_radiation)[i], "^", y,".txt",sep = ""))
+    print(sm)
+    sink()
+    model_seq <- cbind(model_seq, paste(names(solar_radiation)[i], "^", y,sep = ""))
+    r2_seq <- cbind(r2_seq,sm$r.squared)
+    mse_seq <- cbind(mse_seq, mean(sm$residuals^2))
+  }
+}
 
 
 # Order of Deletion
