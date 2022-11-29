@@ -15,6 +15,11 @@ setwd("C:\\Users\\chris\\Downloads\\School\\Fall 2022\\Math 261A - Regression Th
 library(readr)
 filename = "solar-radiation.csv"
 solar_radiation <- read_csv(filename)
+solar_radiation <- solar.radiation
+
+monthfactor <- factor(solar_radiation$Month)
+contrasts(monthfactor) <-contr.treatment(4,base=1)
+contrasts(monthfactor)
 
 # Create a train/test split
 set.seed(1)
@@ -25,7 +30,7 @@ test <- solar_radiation[!sample,]
 
 # Remove Night Time values
 
-train <- train[train$`Day=1/Night=0` == 1,]
+train <- train[train$Day.1.Night.0 == 1,]
 
 # Save data series (columns) 
 # into local variables
@@ -34,7 +39,7 @@ Radiation <- train$Radiation
 Temperature <- train$Temperature
 Pressure <- train$Pressure
 Humidity <- train$Humidity
-WindDirection <- train$`WindDirection(Degrees)`
+WindDirection <- train$WindDirection.Degrees
 Speed <- train$Speed
 DayNight <- train$`Day=1/Night=0`
 Month <- train$Month
@@ -466,3 +471,37 @@ plot(Time, Radiation)
 fit <- lm(Radiation~Time + Temperature + Pressure + Humidity 
           + WindDirection + Speed)
 summary(fit)
+
+#Prediction on test
+
+monthfactor <- factor(solar_radiation$Month)
+class(final_data$MonthFactor)
+final_data <- cbind(solar_radiation$Radiation, solar_radiation$Pressure,I(log(solar_radiation$Temperature))
+                    ,I(1/(solar_radiation$Humidity)),I(sqrt(solar_radiation$WindDirection.Degrees.))
+                    ,I(sqrt(solar_radiation$Speed)),I(((solar_radiation$TimeOfDay-solar_radiation$TimeSunRise)^3))
+                    , factor(solar_radiation$Month),solar_radiation$Day.1.Night.0)
+final_data <- as.data.frame(final_data)
+names(final_data)[1] <- "Radiation"
+names(final_data)[2] <- "Pressure"
+names(final_data)[3] <- "LogTemperature"
+names(final_data)[4] <- "InverseHumidity"
+names(final_data)[5] <- "RootWindDirection"
+names(final_data)[6] <- "RootWindSpeed"
+names(final_data)[7] <- "CubedTimeSinceSunrise"
+names(final_data)[8] <- "MonthFactor"
+names(final_data)[9] <- "Day"
+final_data[8] <- monthfactor
+
+set.seed(1)
+sample <- sample(c(TRUE,FALSE), nrow(final_data), 
+                 replace = TRUE, prob = c(0.8,0.2))
+train <- final_data[sample,]
+test <- final_data[!sample,]
+
+fit <- lm(Radiation ~ Pressure + LogTemperature + InverseHumidity + RootWindDirection + RootWindSpeed + 
+            CubedTimeSinceSunrise + MonthFactor, data = train)
+summary(fit)
+predictions <- predict(fit,test)
+predictions
+prediction.accuracy <- 1 - sum((test$Radiation - predictions)^2)/sum((test$Radiation - mean(test$Radiation))^2)
+prediction.accuracy
