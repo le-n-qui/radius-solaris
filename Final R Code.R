@@ -107,6 +107,8 @@ abline(0,1)
 
 
 # Compare Individual Transformations
+fit <- lm(Radiation ~ Temperature + Pressure + Humidity + WindDirection + Speed + TimeSinceSunRise)
+
 par(mfrow=c(2,5))
 fitlog <- lm(I(sqrt(Radiation)) ~ Temperature + Pressure + Humidity + WindDirection + Speed + I(log(TimeSinceSunRise)))
 qqnorm(rstandard(fitlog), main="Log")
@@ -134,6 +136,12 @@ plot(rstandard(fitsqrt) ~ fitted.values(fitsqrt), main="Sqrt")
 plot(rstandard(fit2) ~ fitted.values(fit2), main="Square")
 plot(rstandard(fit3) ~ fitted.values(fit3), main="Cube")
 
+summary(fit)
+summary(fitlog)
+summary(fitinv)
+summary(fitsqrt)
+summary(fit2)
+summary(fit3)
 
 # R^2, sqrt{MS_Res}
 # 1, log, -1, sqrt, 2, 3
@@ -164,10 +172,12 @@ logT <- I(log(Temperature))
 invH <- I(1/(Humidity))
 sqrtWD <- I(sqrt(WindDirection))
 sqrtS <- I(sqrt(Speed))
-TSSR <- I((TimeSinceSunRise)^3)
+TSSR3 <- I((TimeSinceSunRise)^3)
 
-fit <- lm(I(sqrt(Radiation)) ~ logT + Pressure + invH + sqrtWD + sqrtS + TSSR)
-drop1(fit, I(sqrt(Radiation)) ~ logT + Pressure + invH + sqrtWD + sqrtS + TSSR, test = "F")
+fit <- lm(I(sqrt(Radiation)) ~ logT + Pressure + invH + sqrtWD + sqrtS + TSSR3)
+drop1(fit, I(sqrt(Radiation)) ~ logT + Pressure + invH + sqrtWD + sqrtS + TSSR3, test = "F")
+
+fit <- lm(I(sqrt(Radiation)) ~ logT + invH + sqrtWD + sqrtS + TSSR3)
 summary(fit)
 par(mfrow=c(1,2))
 
@@ -186,7 +196,7 @@ fit <- lm(I(sqrt(Radiation)) ~
           + poly(invH-mean(invH),2) 
           + poly(sqrtWD-mean(sqrtWD),2) 
           + poly(sqrtS-mean(sqrtS),2) 
-          + poly(TSSR-mean(TSSR),2))
+          + poly(TSSR3-mean(TSSR3),2))
 summary(fit)
 
 # Delete Insignificant Predictors (F test)
@@ -195,7 +205,7 @@ cPressure <- Pressure-mean(Pressure)
 cinvH <- invH-mean(invH)
 csqrtWD <- sqrtWD-mean(sqrtWD)
 csqrtS <- sqrtS-mean(sqrtS)
-cTSSR <- TSSR-mean(TSSR)
+cTSSR3 <- TSSR3-mean(TSSR3)
 
 fit <- lm(I(sqrt(Radiation)) ~ 
           clogT+ I(clogT^2)
@@ -203,14 +213,14 @@ fit <- lm(I(sqrt(Radiation)) ~
           + cinvH + I(cinvH^2) 
           + csqrtWD + I(csqrtWD^2) 
           + csqrtS + I(csqrtS^2) 
-          + cTSSR + I(cTSSR^2))
+          + cTSSR3 + I(cTSSR3^2))
 drop1(fit, I(sqrt(Radiation)) ~ 
           clogT+ I(clogT^2)
           + cPressure + I(cPressure^2) 
           + cinvH + I(cinvH^2) 
           + csqrtWD + I(csqrtWD^2) 
           + csqrtS + I(csqrtS^2) 
-          + cTSSR + I(cTSSR^2),
+          + cTSSR3 + I(cTSSR3^2),
       test = "F")
 fit <- lm(I(sqrt(Radiation)) ~ 
             clogT+ I(clogT^2)
@@ -218,15 +228,16 @@ fit <- lm(I(sqrt(Radiation)) ~
           + cinvH 
           + csqrtWD + I(csqrtWD^2) 
           + csqrtS + I(csqrtS^2) 
-          + cTSSR + I(cTSSR^2))
+          + cTSSR3 + I(cTSSR3^2))
 drop1(fit, I(sqrt(Radiation)) ~ 
         clogT+ I(clogT^2)
       + cPressure + I(cPressure^2) 
       + cinvH 
       + csqrtWD + I(csqrtWD^2) 
       + csqrtS + I(csqrtS^2) 
-      + cTSSR + I(cTSSR^2),
+      + cTSSR3 + I(cTSSR3^2),
       test = "F")
+summary(fit)
 ####################
 # Final Polynomial #
 ####################
@@ -236,14 +247,14 @@ fit <- lm(I(sqrt(Radiation)) ~
           + cinvH 
           + csqrtWD
           + csqrtS + I(csqrtS^2) 
-          + cTSSR + I(cTSSR^2))
+          + cTSSR3 + I(cTSSR3^2))
 drop1(fit, I(sqrt(Radiation)) ~ 
         clogT+ I(clogT^2)
       + cPressure + I(cPressure^2) 
       + cinvH 
       + csqrtWD
       + csqrtS + I(csqrtS^2) 
-      + cTSSR + I(cTSSR^2),
+      + cTSSR3 + I(cTSSR3^2),
       test = "F")
 
 par(mfrow=c(1,2))
@@ -255,22 +266,21 @@ plot(rstandard(fit) ~ fitted.values(fit), main="Polynomial Individual Transforma
 
 summary(fit)
 
-
-
-
-
-qqnorm(rstandard(fit), main="Individual Transformations")
-abline(0,1)
-
-plot(rstandard(fit) ~ fitted.values(fit), main="Individual Transformations")
-
 library(leaps)
 all <- regsubsets(x=cbind(logT, I(logT^2), 
                           Pressure, I(Pressure^2), 
                           invH, I(invH^2), 
                           sqrtWD, I(sqrtWD^2), 
                           sqrtS, I(sqrtS^2), 
-                          TSSR, I(TSSR^2)),
+                          TSSR3, I(TSSR3^2)),
+                  y=Radiation, method = "exhaustive", 
+                  all.best = FALSE, nbest = 3)
+all <- regsubsets(x=cbind(logT,
+                          Pressure,
+                          invH,
+                          sqrtWD,
+                          sqrtS,
+                          TSSR3),
                   y=Radiation, method = "exhaustive", 
                   all.best = FALSE, nbest = 3)
 summary(all)
@@ -286,6 +296,46 @@ output <- cbind(p, Matrix, SSRes, R2, AdjR2, MSRes, Cp)
 colnames(output)[3:7] <- c("Temperature", "Pressure", "Humidity",
                            "Wind Direction", "Wind Speed") 
 output
+
+
+#####################
+# Final Final Model #
+#####################
+
+# Add Month
+fit <- lm(I(sqrt(Radiation)) ~ logT + Pressure + invH + sqrtWD + sqrtS + TSSR3 + monthfactor)
+
+# PRESS Statistic and R^2 Prediction
+library(MPV)
+PRESS <- PRESS(fit)
+SST <- sum(anova(fit)["Sum Sq"])
+R2_Pred <- 1 - PRESS / SST
+R2_Pred
+
+par(mfrow=c(1,2))
+
+qqnorm(rstandard(fit), main="Polynomial Individual Transformations")
+abline(0,1)
+
+plot(rstandard(fit) ~ fitted.values(fit), main="Polynomial Individual Transformations")
+
+summary(fit)
+
+# Predict Individual Slopes
+
+# Leverage and Influence
+
+# Predict the Average Solar Radiation In San Jose?
+
+# Confidence Intervals
+
+
+
+
+
+
+
+
 
 
 
