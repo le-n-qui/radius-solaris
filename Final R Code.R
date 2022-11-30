@@ -438,7 +438,7 @@ plot(Humidity, Radiation)
 plot(WindDirection, Radiation)
 plot(Speed, Radiation)
 plot(DayNight, Radiation)
-plot(TimeSinceSunRise, Radiation)
+plot(TimeSinceSunRise, Radiation, main = "Outlier Data")
 plot(transformed.Time, Radiation)
 fit <- lm(Radiation~transformed.Time)
 summary(fit)
@@ -474,14 +474,16 @@ summary(fit)
 
 #Prediction on test
 
+names(solar_radiation)[6] <- "WindDirection"
+names(solar_radiation)[8] <- "DayNight"
 monthfactor <- factor(solar_radiation$Month)
 class(final_data$MonthFactor)
-final_data <- cbind(solar_radiation$Radiation, solar_radiation$Pressure,I(log(solar_radiation$Temperature))
-                    ,I(1/(solar_radiation$Humidity)),I(sqrt(solar_radiation$WindDirection.Degrees.))
+final_data <- cbind(I(sqrt(solar_radiation$Radiation)), solar_radiation$Pressure,I(log(solar_radiation$Temperature))
+                    ,I(1/(solar_radiation$Humidity)),I(sqrt(solar_radiation$WindDirection))
                     ,I(sqrt(solar_radiation$Speed)),I(((solar_radiation$TimeOfDay-solar_radiation$TimeSunRise)^3))
-                    , factor(solar_radiation$Month),solar_radiation$Day.1.Night.0)
+                    , monthfactor,solar_radiation$DayNight)
 final_data <- as.data.frame(final_data)
-names(final_data)[1] <- "Radiation"
+names(final_data)[1] <- "RootRadiation"
 names(final_data)[2] <- "Pressure"
 names(final_data)[3] <- "LogTemperature"
 names(final_data)[4] <- "InverseHumidity"
@@ -497,11 +499,12 @@ sample <- sample(c(TRUE,FALSE), nrow(final_data),
                  replace = TRUE, prob = c(0.8,0.2))
 train <- final_data[sample,]
 test <- final_data[!sample,]
+train <- train[train$Day == 1,]
+test <- test[test$Day == 1,]
 
-fit <- lm(Radiation ~ Pressure + LogTemperature + InverseHumidity + RootWindDirection + RootWindSpeed + 
+fit <- lm(RootRadiation ~ Pressure + LogTemperature + InverseHumidity + RootWindDirection + RootWindSpeed + 
             CubedTimeSinceSunrise + MonthFactor, data = train)
 summary(fit)
 predictions <- predict(fit,test)
-predictions
-prediction.accuracy <- 1 - sum((test$Radiation - predictions)^2)/sum((test$Radiation - mean(test$Radiation))^2)
+prediction.accuracy <- 1 - sum((test$RootRadiation - predictions)^2)/sum((test$RootRadiation - mean(test$RootRadiation))^2)
 prediction.accuracy
