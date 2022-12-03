@@ -15,6 +15,12 @@ setwd("C:\\Users\\chris\\Downloads\\School\\Fall 2022\\Math 261A - Regression Th
 library(readr)
 filename = "solar-radiation.csv"
 solar_radiation <- read_csv(filename)
+names(solar_radiation)[6] <- "WindDirection"
+names(solar_radiation)[8] <- "DayNight"
+
+monthfactor <- factor(solar_radiation$Month)
+contrasts(monthfactor) <-contr.treatment(4,base=1)
+contrasts(monthfactor)
 
 # Create a train/test split
 set.seed(1)
@@ -25,18 +31,21 @@ test <- solar_radiation[!sample,]
 
 # Remove Night Time values
 
-train <- train[train$`Day=1/Night=0` == 1,]
+train <- train[train$DayNight == 1,]
+test <- test[test$DayNight == 1,]
 
 # Save data series (columns) 
 # into local variables
+names(solar_radiation)[6] <- "WindDirection"
+names(solar_radiation)[8] <- "DayNight"
 UNIX <- train$UNIXTime
 Radiation <- train$Radiation
 Temperature <- train$Temperature
 Pressure <- train$Pressure
 Humidity <- train$Humidity
-WindDirection <- train$`WindDirection(Degrees)`
+WindDirection <- train$WindDirection
 Speed <- train$Speed
-DayNight <- train$`Day=1/Night=0`
+DayNight <- train$DayNight
 Month <- train$Month
 Day <- train$Day
 TimeOfDay <- train$TimeOfDay
@@ -82,7 +91,8 @@ fit <- lm(I(sqrt(Radiation)) ~ Temperature)
 fit <- lm(I(sqrt(Radiation)) ~ I(Temperature^2))
 summary(fit)
 
-plot(fitted.values(fit),rstandard(fit))
+plot(fitted.values(fit),residuals(fit))
+abline(0,-1, col = "red")
 qqnorm(rstandard(fit))
 abline(0,1)
 
@@ -381,12 +391,12 @@ solve(cor(cbind(Temperature, Pressure, Humidity, WindDirection, Speed, TimeSince
 
 # Plot residual plot
 # to examine residual assumptions
-plot(fitted.values(fit), residuals(fit), 
+plot(fitted.values(fit), rstudent(fit), 
      xlab = "fitted values", ylab = "Studentized residuals",
      main = "residual plot")
 
 qqnorm(rstandard(fit))
-abline(0,-1, col = "red")
+abline(0,1, col = "red")
 
 # Initial variable selection
 
@@ -433,7 +443,7 @@ plot(Humidity, Radiation)
 plot(WindDirection, Radiation)
 plot(Speed, Radiation)
 plot(DayNight, Radiation)
-plot(TimeSinceSunRise, Radiation)
+plot(TimeSinceSunRise, Radiation, main = "Outlier Data")
 plot(transformed.Time, Radiation)
 fit <- lm(Radiation~transformed.Time)
 summary(fit)
@@ -466,3 +476,74 @@ plot(Time, Radiation)
 fit <- lm(Radiation~Time + Temperature + Pressure + Humidity 
           + WindDirection + Speed)
 summary(fit)
+
+fit <- lm(Radiation ~ Speed)
+x <- c(0:80000)
+plot(test$CubedTimeSinceSunrise, test$RootRadiation)
+lines(x,12.05- .00000000000005631* x^3, col = "red")
+fit <- lm(RootRadiation ~ CubedTimeSinceSunrise, data = final_data)
+
+
+
+#Prediction on test
+
+names(solar_radiation)[6] <- "WindDirection"
+names(solar_radiation)[8] <- "DayNight"
+monthfactor <- factor(solar_radiation$Month)
+class(final_data$MonthFactor)
+final_data <- cbind(I(sqrt(solar_radiation$Radiation)), solar_radiation$Pressure,I(log(solar_radiation$Temperature))
+                    ,I(1/(solar_radiation$Humidity)),I(sqrt(solar_radiation$WindDirection))
+                    ,I(sqrt(solar_radiation$Speed)),I(((solar_radiation$TimeOfDay-solar_radiation$TimeSunRise)^3))
+                    , monthfactor,solar_radiation$DayNight)
+final_data <- as.data.frame(final_data)
+names(final_data)[1] <- "RootRadiation"
+names(final_data)[2] <- "Pressure"
+names(final_data)[3] <- "LogTemperature"
+names(final_data)[4] <- "InverseHumidity"
+names(final_data)[5] <- "RootWindDirection"
+names(final_data)[6] <- "RootWindSpeed"
+names(final_data)[7] <- "CubedTimeSinceSunrise"
+names(final_data)[8] <- "MonthFactor"
+names(final_data)[9] <- "Day"
+final_data[8] <- monthfactor
+
+set.seed(1)
+sample <- sample(c(TRUE,FALSE), nrow(final_data), 
+                 replace = TRUE, prob = c(0.8,0.2))
+train <- final_data[sample,]
+test <- final_data[!sample,]
+train <- train[train$Day == 1,]
+test <- test[test$Day == 1,]
+
+fit <- lm(RootRadiation ~ Pressure + LogTemperature + InverseHumidity + RootWindDirection + RootWindSpeed + 
+            CubedTimeSinceSunrise + MonthFactor, data = train)
+summary(fit)
+predictions <- predict(fit,test)
+prediction.accuracy <- 1 - sum((test$RootRadiation - predictions)^2)/sum((test$RootRadiation - mean(test$RootRadiation))^2)
+prediction.accuracy
+
+par(mfrow=c(1,2))
+plot(TimeSinceSunRise, Temperature, main = "Time vs Temperature")
+plot(TimeSinceSunRise, Radiation, main = "Time vs Radiation")
+plot(TimeSinceSunRise, predictions ^ 2, main = "Time vs Predicted Radiation")
+plot(train$CubedTimeSinceSunrise, train$LogTemperature, main = "CubedTime vs LogRadiation")
+influencence.measure <- cooks.distance(fit)
+influencence.measure
+sorted <- sort(influencence.measure)
+sorted[length(sorted)]
+sort(predictions)
+
+UNIX <- train$UNIXTime
+Radiation <- test$Radiation
+Temperature <- test$Temperature
+Pressure <- train$Pressure
+Humidity <- train$Humidity
+WindDirection <- train$WindDirection
+Speed <- train$Speed
+DayNight <- train$DayNight
+Month <- train$Month
+Day <- train$Day
+TimeOfDay <- test$TimeOfDay
+TimeSunRise <- test$TimeSunRise
+TimeSunSet <- test$TimeSunSet
+TimeSinceSunRise <- TimeOfDay - TimeSunRise
