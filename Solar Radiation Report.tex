@@ -1,0 +1,130 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage{float}
+\usepackage[table]{xcolor}
+\usepackage{cite}
+\usepackage{subcaption}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{url}
+
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+    
+    
+\newcommand*{\affaddr}[1]{#1} % No op here. Customize it for different styles.
+\newcommand*{\affmark}[1][*]{\textsuperscript{#1}}
+\newcommand*{\email}[1]{\textit{#1}}
+    
+\begin{document}
+
+\title{Predicting Solar Radiation}
+
+\author{%
+Chris Gerlach, Prathana Phukon, Qui Le, Chun For Tam, Wilson Strasilla\\
+
+\affaddr{San Jose State University}\\
+
+\email{\{chris.gerlach, prathana.phukon, qui.le, chunfor.tam, wilson.strasilla\}@sjsu.edu}\\
+}
+
+\IEEEoverridecommandlockouts
+\IEEEpubid{\makebox[\columnwidth]{978-1-7281-6251-5/20/\$31.00~\copyright2020 IEEE \hfill} \hspace{\columnsep}\makebox[\columnwidth]{ }}
+
+\maketitle
+
+\section{Introduction}
+
+\subsection{Background}
+
+\subsection{Dataset Description}
+
+Solar radiation: watts per meter$^2$
+
+Temperature: degrees Fahrenheit
+
+Humidity: percent
+
+Barometric pressure: Hg
+
+Wind direction: degrees
+
+Wind speed: miles per hour
+
+Sunrise/sunset: Hawaii time
+
+\section{Data Preprocessing}
+\label{sec:dataset}
+\quad The {\sc Solar Radiation} dataset has no invalid data points, such as NaNs.
+
+
+%-----------------------------------------------------------------------------------------------
+\section{Data Modeling}
+\label{sec:pre}
+TBD
+
+\subsection{First}
+TBD
+\subsection{Second}
+TBD. 
+
+
+%-----------------------------------------------------------------------------------------------
+
+\section{Prediction Model}
+\label{sec:models}
+We used different regression models ...
+%----------------------------------------------
+
+\subsection{Evaluation}
+TBD
+
+
+\[
+    RMSE=\sqrt{\frac{\Sigma(y_i-\hat{y_i})^2}{n}}
+\]
+
+
+%------------------------------------------------------------------------------------------
+%------------------------------------------------------------------------------------------
+
+
+%------------------------------------------------------------------------------------------
+
+\section{Results}
+\label{sec:results}
+
+
+
+%-----------------------------------------------------------------
+\subsection{More Results}
+
+
+
+
+
+%----------------------------------------------------------------------------------------------------------
+\section{Conclusion and Future Work}
+\label{sec:conclusion}
+
+TBD
+%----------------------------------------------------------------------------------------------------------
+\section*{Acknowledgment}
+TBD.
+
+
+\bibliographystyle{IEEEtran}
+\bibliography{IEEEfull,sample-base}
+%-------------------------------------------------------
+
+\end{document}
+
